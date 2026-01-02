@@ -10,6 +10,8 @@ let controls = {
     zoom: 1
 };
 
+let coinMat, groundMat, wallMat;   // ADD THIS LINE
+
 // Settings
 let settings = {
     gravity: 9.82,
@@ -91,8 +93,8 @@ function setupLighting() {
     pointLight.position.set(3, 5, 3);
     scene.add(pointLight);
 
-    // hemisphere light!
-    const hemi = new THREE.HemisphereLight(0xffffff,0x444444,0.7);
+    // hemisphere light! MORE LIGHT
+    const hemi = new THREE.HemisphereLight(0xffffff,0x444444,1);
     scene.add(hemi);
 }
 
@@ -102,6 +104,24 @@ function initPhysics() {
     world.gravity.set(0, -settings.gravity, 0);
     world.broadphase = new CANNON.NaiveBroadphase();
     world.solver.iterations = 10;
+
+    // ADD THE WHOLE BLOCK IMMEDIATELY AFTER  world.solver.iterations = 10;
+
+    // -------- physics materials --------
+    coinMat  = new CANNON.Material('coin');
+    groundMat= new CANNON.Material('ground');
+    wallMat  = new CANNON.Material('wall');
+    
+    // coin ↔ ground
+    world.addContactMaterial(new CANNON.ContactMaterial(coinMat, groundMat, {
+        friction: 0.3,
+        restitution: settings.restitution
+    }));
+    // coin ↔ walls
+    world.addContactMaterial(new CANNON.ContactMaterial(coinMat, wallMat, {
+        friction: 0.3,
+        restitution: settings.restitution
+    }));
 }
 
 function createEnvironment() {
@@ -134,7 +154,7 @@ function createEnvironment() {
     scene.add(groundMesh);
 
     const groundShape = new CANNON.Box(new CANNON.Vec3(size, 0.1, size));
-    groundBody = new CANNON.Body({ mass: 0 });
+    groundBody = new CANNON.Body({ mass: 0, material: groundMat });
     groundBody.addShape(groundShape);
     groundBody.position.set(0, -size / 2 - 0.1, 0);
     world.add(groundBody);
@@ -155,7 +175,7 @@ function createEnvironment() {
         scene.add(mesh);
 
         const shape = new CANNON.Box(new CANNON.Vec3(wx / 2, wy / 2, wz / 2));
-        const body = new CANNON.Body({ mass: 0 });
+        const body = new CANNON.Body({ mass: 0, material: wallMat});
         body.addShape(shape);
         body.position.set(px, py, pz);
         world.add(body);
@@ -261,6 +281,7 @@ function createCoin() {
     
     coinBody = new CANNON.Body({
         mass: settings.density * 0.1,
+        material: coinMat   // ADD THIS KEY
         shape: coinShape,
         linearDamping: settings.damping,
         angularDamping: 0.1
@@ -436,12 +457,15 @@ function setupSettingsPanel() {
                 coinBody.updateMassProperties();
             }
         }},
-        restitution: { element: 'restitution', value: 'restitution-value', callback: (value) => {
-            settings.restitution = value;
-            if (coinBody && coinBody.material) {
-                coinBody.material.restitution = value;
+        restitution: {
+            element: 'restitution',
+            value: 'restitution-value',
+            callback: (v) => {
+                settings.restitution = v;
+                // update existing contact materials
+                world.contactmaterials.forEach(cm => cm.restitution = v);
             }
-        }},
+        },
         'ground-curvature': { element: 'ground-curvature', value: 'curvature-value', callback: (value) => {
             settings.groundCurvature = value;
             createEnvironment();
