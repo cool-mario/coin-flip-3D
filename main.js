@@ -276,7 +276,7 @@ function createCoin() {
     
     // Create physics body
     const coinShape = new CANNON.Cylinder(coinRadius, coinRadius, coinHeight, 8);
-    coinShape.transform(new CANNON.Quaternion().setFromAxisAngle(new CANNON.Vec3(1,0,0), Math.PI/2));
+    
     coinBody = new CANNON.Body({
         mass: settings.density * 0.1,
         shape: coinShape,
