@@ -88,6 +88,10 @@ function setupLighting() {
     const pointLight = new THREE.PointLight(0xffffff, 0.3, 20);
     pointLight.position.set(3, 5, 3);
     scene.add(pointLight);
+
+    // hemisphere light!
+    const hemi = new THREE.HemisphereLight(0xffffff,0x444444,0.6);
+    scene.add(hemi);
 }
 
 function initPhysics() {
@@ -210,6 +214,8 @@ function createCoin() {
     const coinRadius = 0.5;
     const coinHeight = 0.08;
     const coinGeometry = new THREE.CylinderGeometry(coinRadius, coinRadius, coinHeight, 32);
+    coinGeometry.rotateX(Math.PI / 2);   // ← add this
+
     
     // Create canvas for coin textures
     function createCoinTexture(text, isHeads) {
@@ -270,6 +276,7 @@ function createCoin() {
     
     // Create physics body
     const coinShape = new CANNON.Cylinder(coinRadius, coinRadius, coinHeight, 8);
+    coinShape.transform(new CANNON.Quaternion().setFromAxisAngle(new CANNON.Vec3(1,0,0), Math.PI/2));
     coinBody = new CANNON.Body({
         mass: settings.density * 0.1,
         shape: coinShape,
