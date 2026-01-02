@@ -103,104 +103,84 @@ function initPhysics() {
 }
 
 function createEnvironment() {
-    // Clear existing environment
-    walls.forEach(wall => {
-        scene.remove(wall.mesh);
-        world.remove(wall.body);
-    });
+    /* ----- clear old stuff (keep exactly as you had it) ----- */
+    walls.forEach(w => { scene.remove(w.mesh); world.remove(w.body); });
     walls = [];
-    
-    if (groundBody) {
-        scene.remove(groundBody.mesh);
-        world.remove(groundBody);
-    }
-    
+    if (groundBody) { scene.remove(groundBody.mesh); world.remove(groundBody); }
+
     const size = settings.boxSize;
-    
-    // Create ground with curvature
+    const wallThick = 0.2; // 4× thicker than before (was 0.05)
+
+    /* ---------- ground (unchanged) ---------- */
     const groundGeometry = new THREE.PlaneGeometry(size * 2, size * 2, 32, 32);
-    const vertices = groundGeometry.attributes.position.array;
-    const radius = settings.groundCurvature * 0.04; // Convert to reasonable scale
-    
-    // Apply curvature to ground vertices
-    for (let i = 0; i < vertices.length; i += 3) {
-        const x = vertices[i];
-        const z = vertices[i + 2];
-        const distance = Math.sqrt(x * x + z * z);
-        vertices[i + 1] = (distance * distance) / (2 * radius);
+    const verts = groundGeometry.attributes.position.array;
+    const radius = settings.groundCurvature * 0.04;
+    for (let i = 0; i < verts.length; i += 3) {
+        const x = verts[i], z = verts[i + 2];
+        verts[i + 1] = (x * x + z * z) / (2 * radius);
     }
-    
     groundGeometry.attributes.position.needsUpdate = true;
     groundGeometry.computeVertexNormals();
-    
-    const groundMaterial = new THREE.MeshStandardMaterial({
-        color: 0xf0f0f0,
-        transparent: true,
-        opacity: 0.1,
-        roughness: 0.8,
-        metalness: 0.1
+
+    const groundMat = new THREE.MeshStandardMaterial({
+        color: 0xf0f0f0, transparent: true, opacity: 0.1,
+        roughness: 0.8, metalness: 0.1
     });
-    
-    const groundMesh = new THREE.Mesh(groundGeometry, groundMaterial);
+    const groundMesh = new THREE.Mesh(groundGeometry, groundMat);
     groundMesh.rotation.x = -Math.PI / 2;
     groundMesh.receiveShadow = true;
     scene.add(groundMesh);
-    
-    // Create physics ground shape with curvature
+
     const groundShape = new CANNON.Box(new CANNON.Vec3(size, 0.1, size));
     groundBody = new CANNON.Body({ mass: 0 });
     groundBody.addShape(groundShape);
-    groundBody.position.set(0, -size/2 - 0.1, 0);
+    groundBody.position.set(0, -size / 2 - 0.1, 0);
     world.add(groundBody);
     groundBody.mesh = groundMesh;
-    
-    // Create transparent walls
+
+    /* ---------- walls ---------- */
     const wallMaterial = new THREE.MeshStandardMaterial({
-        color: 0xffffff,
-        transparent: true,
-        opacity: 0.1,
-        side: THREE.DoubleSide,
-        roughness: 0.1,
-        metalness: 0.0
+        color: 0xffffff, transparent: true, opacity: 0.1,
+        side: THREE.DoubleSide, roughness: 0.1, metalness: 0
     });
-    
-    // Wall positions and sizes
-    const wallConfigs = [
-        // Bottom wall
-        { pos: [0, -size/2, 0], size: [size, 0.05, size], rot: [0, 0, 0] },
-        // Top wall
-        { pos: [0, size/2, 0], size: [size, 0.05, size], rot: [0, 0, 0] },
-        // Front wall
-        { pos: [0, 0, -size/2], size: [size, size, 0.05], rot: [0, 0, 0] },
-        // Back wall
-        { pos: [0, 0, size/2], size: [size, size, 0.05], rot: [0, 0, 0] },
-        // Left wall
-        { pos: [-size/2, 0, 0], size: [0.05, size, size], rot: [0, 0, 0] },
-        // Right wall
-        { pos: [size/2, 0, 0], size: [0.05, size, size], rot: [0, 0, 0] }
-    ];
-    
-    wallConfigs.forEach(config => {
-        const geometry = new THREE.BoxGeometry(...config.size.map(s => s * 2));
+
+    /* helper: make one wall ----------------------------*/
+    function makeWall(wx, wy, wz, px, py, pz, rotX = 0, rotY = 0, rotZ = 0) {
+        const geometry = new THREE.BoxGeometry(wx, wy, wz);
         const mesh = new THREE.Mesh(geometry, wallMaterial.clone());
-        mesh.position.set(...config.pos);
-        mesh.rotation.set(...config.rot);
+        mesh.position.set(px, py, pz);
+        mesh.rotation.set(rotX, rotY, rotZ);
         scene.add(mesh);
-        
-        const shape = new CANNON.Box(new CANNON.Vec3(...config.size));
+
+        const shape = new CANNON.Box(new CANNON.Vec3(wx / 2, wy / 2, wz / 2));
         const body = new CANNON.Body({ mass: 0 });
         body.addShape(shape);
-        body.position.set(...config.pos);
+        body.position.set(px, py, pz);
         world.add(body);
-        
-        walls.push({ mesh, body });
-    });
-    
-    // Add subtle grid
-    const gridHelper = new THREE.GridHelper(20, 40, 0xcccccc, 0xcccccc);
-    gridHelper.material.opacity = 0.1;
-    gridHelper.material.transparent = true;
-    scene.add(gridHelper);
+        walls.push({ mesh: mesh, body: body });
+    }
+
+    /* ---- outward-shifted cube walls (inside faces exactly 'size' apart) ---- */
+    const hSize = size / 2; // half the internal size
+    const T = wallThick;
+
+    // floor & ceiling (Y-shifted)
+    makeWall(size, T, size, 0, -hSize - T / 2, 0);
+    makeWall(size, T, size, 0, hSize + T / 2, 0);
+
+    // front & back (Z-shifted)
+    makeWall(size, size + 2 * T, T, 0, 0, -hSize - T / 2);
+    makeWall(size, size + 2 * T, T, 0, 0, hSize + T / 2);
+
+    // left & right (X-shifted)
+    makeWall(T, size + 2 * T, size + 2 * T, -hSize - T / 2, 0, 0);
+    makeWall(T, size + 2 * T, size + 2 * T, hSize + T / 2, 0, 0);
+
+    /* ---------- subtle grid (unchanged) ---------- */
+    const grid = new THREE.GridHelper(20, 40, 0xcccccc, 0xcccccc);
+    grid.material.opacity = 0.1;
+    grid.material.transparent = true;
+    scene.add(grid);
 }
 
 function createCoin() {
