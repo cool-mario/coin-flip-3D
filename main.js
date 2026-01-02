@@ -281,7 +281,7 @@ function createCoin() {
     
     coinBody = new CANNON.Body({
         mass: settings.density * 0.1,
-        material: coinMat   // ADD THIS KEY
+        material: coinMat,   // ADD THIS KEY
         shape: coinShape,
         linearDamping: settings.damping,
         angularDamping: 0.1
