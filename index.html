@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Physics Coin Flip</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cannon.js/0.6.2/cannon.min.js"></script>
+    <link rel="stylesheet" href="style.css">
+<base target="_blank">
+</head>
+<body>
+    <div id="container">
+        <!-- Settings Panel Toggle -->
+        <button id="settings-toggle" class="settings-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="3"></circle>
+                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1 1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+            </svg>
+        </button>
+
+        <!-- Settings Panel -->
+        <div id="settings-panel" class="settings-panel visible">
+            <h3>Settings</h3>
+            
+            <div class="setting-group">
+                <label for="gravity">Gravity: <span id="gravity-value">9.82</span> m/s²</label>
+                <input type="range" id="gravity" min="0" max="20" step="0.1" value="9.82">
+            </div>
+
+            <div class="setting-group">
+                <label for="density">Coin Density: <span id="density-value">1</span></label>
+                <input type="range" id="density" min="0.1" max="5" step="0.1" value="1">
+            </div>
+
+            <div class="setting-group">
+                <label for="restitution">Restitution: <span id="restitution-value">0.6</span></label>
+                <input type="range" id="restitution" min="0" max="1" step="0.05" value="0.6">
+            </div>
+
+            <div class="setting-group">
+                <label for="ground-curvature">Ground Curvature: <span id="curvature-value">10</span>x</label>
+                <input type="range" id="ground-curvature" min="5" max="50" step="1" value="10">
+            </div>
+
+            <div class="setting-group">
+                <label for="box-size">Box Size: <span id="box-size-value">5</span></label>
+                <input type="range" id="box-size" min="3" max="10" step="0.5" value="5">
+            </div>
+
+            <div class="setting-group">
+                <label for="damping">Linear Damping: <span id="damping-value">0.1</span></label>
+                <input type="range" id="damping" min="0" max="1" step="0.01" value="0.1">
+            </div>
+        </div>
+
+        <!-- Instructions -->
+        <div class="instructions">
+            <p>Press <kbd>SPACE</kbd> to flip coin</p>
+            <p>Drag to rotate • Scroll to zoom • Arrow keys to orbit</p>
+        </div>
+    </div>
+
+    <script src="main.js"></script>
+</body>
+</html>
