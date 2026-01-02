@@ -65,6 +65,8 @@ function init() {
     animate();
 }
 
+
+
 function setupLighting() {
     // Ambient light
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
@@ -109,7 +111,7 @@ function createEnvironment() {
     if (groundBody) { scene.remove(groundBody.mesh); world.remove(groundBody); }
 
     const size = settings.boxSize;
-    const wallThick = 0.2; // 4× thicker than before (was 0.05)
+    const wallThick = 0.5; // 4× thicker than before (was 0.05)
 
     /* ---------- ground (unchanged) ---------- */
     const groundGeometry = new THREE.PlaneGeometry(size * 2, size * 2, 32, 32);
@@ -384,24 +386,24 @@ function onKeyDown(event) {
 
 function flipCoin() {
     if (!coinBody) return;
-    
-    // Random impulse
-    const force = new CANNON.Vec3(
-        (Math.random() - 0.5) * 10,
-        Math.random() * 15 + 10,
-        (Math.random() - 0.5) * 10
+
+    const maxH = settings.boxSize * 0.6; // never exceed ~60 % of box height
+    const upImpulse = THREE.MathUtils.randFloat(4, 7); // was 10-25
+    const horizImpulse = THREE.MathUtils.randFloatSpread(4); // ±2
+
+    coinBody.velocity.set(horizImpulse, 0, horizImpulse); // zero old vel
+    coinBody.applyImpulse(
+        new CANNON.Vec3(horizImpulse, upImpulse, 0),
+        coinBody.position
     );
-    
-    coinBody.applyImpulse(force, coinBody.position);
-    
-    // Random angular velocity (at least 3 revolutions on two axes)
-    const angularVelocity = new CANNON.Vec3(
-        (Math.random() - 0.5) * 20 + (Math.random() > 0.5 ? 20 : -20),
-        (Math.random() - 0.5) * 20 + (Math.random() > 0.5 ? 20 : -20),
-        (Math.random() - 0.5) * 20 + (Math.random() > 0.5 ? 20 : -20)
+
+    // angular spin (same as before, just capped)
+    const ang = 20;
+    coinBody.angularVelocity.set(
+        THREE.MathUtils.randFloatSpread(ang),
+        THREE.MathUtils.randFloatSpread(ang),
+        THREE.MathUtils.randFloatSpread(ang)
     );
-    
-    coinBody.angularVelocity.set(angularVelocity.x, angularVelocity.y, angularVelocity.z);
 }
 
 function setupSettingsPanel() {
