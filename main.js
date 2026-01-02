@@ -71,7 +71,7 @@ function setupLighting() {
     scene.add(ambientLight);
     
     // Directional light (ceiling)
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.7);
     directionalLight.position.set(0, 10, 0);
     directionalLight.castShadow = true;
     directionalLight.shadow.mapSize.width = 2048;
@@ -90,7 +90,7 @@ function setupLighting() {
     scene.add(pointLight);
 
     // hemisphere light!
-    const hemi = new THREE.HemisphereLight(0xffffff,0x444444,0.6);
+    const hemi = new THREE.HemisphereLight(0xffffff,0x444444,0.7);
     scene.add(hemi);
 }
 
